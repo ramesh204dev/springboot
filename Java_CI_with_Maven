@@ -1,0 +1,114 @@
+# DevOps
+
+- build
+- test
+- deploy
+- monitoring
+
+
+# Exercise 1: build CI/CD pipeline using GitHub Actions
+
+Step 1: create an spring boot app - maven
+
+package com.thevarungupta.spring.boot.sample.app;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class HomeController {
+    @GetMapping
+    public String home(){
+        return "Welcome to Spring Boot";
+    }
+}
+
+
+Step 2: create a GitHub popo
+
+> git push origin master
+
+
+Step 3: generate a maven.yml
+
+action > Java with Maven > commit changes
+
+Step 4: git pull
+
+> git pull origin master
+
+
+Step 5: create a Dockerfile
+
+
+FROM openjdk:17.0.1-jdk-slim
+EXPOSE 8080
+ARG JAR_FILE=target/*.jar
+COPY ${JAR_FILE} app.jar
+ENTRYPOINT ["java","-jar","/app.jar"]
+
+
+Step 6: modify the maven.yml file
+
+
+# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Java CI with Maven
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+    - name: Build with Maven
+#      run: mvn -B package --file pom.xml
+      run: mvn clean install
+
+    - name: Build and push image
+      uses: mr-smithers-excellent/docker-build-push@v5
+      with:
+        image: varungupta2809/demo-github-action
+        tags: latest
+        registry: docker.io
+        dockerfile: Dockerfile
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+
+
+Step 7: create a secret in GitHub
+
+GitHub repo > settings > secret and variables > action
+
+create two secrets
+
+DOCKER_USERNAME
+DOCKER_PASSWORD
+
+
+Step 8: push changes
+> git push origin master
+
+Step 9: GitHub action - build - success
+
+Step 10: create a container from dockerhub image
