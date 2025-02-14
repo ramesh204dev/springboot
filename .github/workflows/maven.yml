@@ -34,7 +34,7 @@ jobs:
     - name: Build and push image
       uses: mr-smithers-excellent/docker-build-push@v5
       with:
-        image: springbootsample
+        image: ramesh204dev/springbootsample
         tags: latest
         registry: docker.io
         dockerfile: Dockerfile
