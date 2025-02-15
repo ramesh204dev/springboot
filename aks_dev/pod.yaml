@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: spring-pod
+  labels:
+    app: webapp
+spec:
+  containers:
+    - name: webapp
+      image: acraz204devram.azurecr.io/spring-webv2:latest

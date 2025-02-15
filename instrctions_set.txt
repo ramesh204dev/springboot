@@ -1,0 +1,100 @@
+## Exercise : deploy spring app on aks
+
+1. create a spring app
+spring.io
+
+2. create a jar file
+> mvn clean install
+(make sure JAVA_HOME & PATH set same as pom.xml )
+maven set up also
+check java --version
+mvn -version
+
+3. create a dockerfile
+ start the docker in your local
+
+4. build an image
+> docker build -t spring-image .
+
+create container registry
+azure registry and copy the username , password for login in intellij
+ click admin user to get the username and password
+5. push image on azure registry
+> docker login <acraz204devram.azurecr.io>
+
+PS C:\Users\venka\Downloads\git\spring-boot-demo> docker login acraz204devram.azurecr.io
+Username: acraz204devram
+Password:
+Login Succeeded
+
+[username]
+
+[password]
+
+tagging buit image of spring-image to acr image as spring-web
+> docker tag spring-web <azure_registry_url>/spring-web
+
+docker tag spring-image acraz204devram.azurecr.io/spring-web
+
+ docker images
+> docker push <azure_registry_url>/spring-web
+
+ docker push acraz204devram.azurecr.io/spring-web
+
+ ---fastest way to deploy the app use container instance
+
+ docker container prune
+ docker ps -a
+ --while creating container instance provide image source from created azure container registry Ex: acraz204devram
+ -- networking create rule for exposing 8080/application running port via TCP protocol
+ -- we can access rest endpoint of image deployed using container instance public ip address
+----------
+For Windows:
+Identify the process using port 8080: Open Command Prompt as Administrator and run:
+         netstat -ano | findstr :8080
+This will display a list of processes using port 8080 along with the PID (Process ID).
+
+Stop the process: After finding the PID, stop the process by running:
+         taskkill /F /PID <PID>
+Replace <PID> with the actual Process ID.
+
+---Create POD to run aks --- pod.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: spring-pod
+  labels:
+    app: webapp
+spec:
+  containers:
+    - name: webapp
+      image: acraz204devram.azurecr.io/spring-webv2:latest
+
+-- attach the service to above running pod for external world to access it----------
+--- most important to note down is pod has labels: app : webapp which is used for selector in service.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-app-service
+spec:
+  selector:
+    app: webapp
+  ports:
+   - protocol: 'TCP'
+     port: 8081
+     targetPort:
+  type: LoadBalancer
+
+---learn how to deploy newer version of application with low downtime -----------
+
+1) create spring-hello-image2 and push to ACR
+2) create new pod with the new spring-hello-image without changing the label name
+	- since our service looks for pods with label
+
+3) bring down olderversion of pods and our service will not access to pods with label=webapp
+
+services use apiVersion= v1
+deployements use apiVersion= apps/v1
+-----------------------------
